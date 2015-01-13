@@ -1,10 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 ## Introduction
 
 This document presents the results of peer assessments 1 of course [**Reproducible Research**](https://class.coursera.org/repdata-010) on [**Coursera**](https://www.coursera.org). 
@@ -33,7 +27,8 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 ## Loading and preprocessing the data
 
 The following statements are used to load the data using `read.csv()` and process the data into a format for further analysis.
-```{r read_data}
+
+```r
 ### load input data from the downloaded "activity.zip" file
 data0 <- read.csv(unz("activity.zip","activity.csv"),header = T, sep =",")
 
@@ -43,7 +38,6 @@ data$date <- as.Date(data$date,format = "%Y-%m-%d")
 
 ### transform variable "interval" as Factor class
 data$interval <- as.factor(data$interval)
-
 ```
 
 ## What is mean total number of steps taken per day?
@@ -51,7 +45,8 @@ data$interval <- as.factor(data$interval)
 Now let's ignore the missing values.
 
 1. Make a historgram of the toal number of steps taken each day
-```{r_histo}
+
+```r
 ### calculte the total number of steps taken each day
 dailySteps <- aggregate(steps ~ date, data, sum)
 
@@ -59,25 +54,36 @@ dailySteps <- aggregate(steps ~ date, data, sum)
 hist(dailySteps$steps,main="Histogram of the Daily Steps", breaks=20,xlab="Total number of steps taken each day", col = "green")
 ```
 
+![](./PA1_template_files/figure-html/_histo-1.png) 
+
 2. calculate the mean and median total number of steps taken per day
-```{r_mean_median}
+
+```r
 dailyStepsMean <- mean(dailySteps$steps, na.rm = TRUE)
 dailyStepsMedian <- median(dailySteps$steps, na.rm = TRUE)
 ```
-The mean daily steps is **`r format(dailyStepsMean, digits = 8)`** and the median daily steps is 
-**`r format(dailyStepsMedian,digits=8)`**.
+The mean daily steps is **10766.189** and the median daily steps is 
+**10765**.
 
 
 ## What is the average daily activity pattern?
 
 1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all day.
-```{r_ave_daily}
+
+```r
 ### calculate interval-based average steps
 intervalSteps <- aggregate(steps ~ interval, data, FUN = mean, na.rm = TRUE)
 interval <- as.integer(levels(intervalSteps$interval))
 
 ### make a plot using ggplot2 package
 library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.1.2
+```
+
+```r
 qplot(x = interval, y = intervalSteps$steps, geom ="line", color = I("blue"),
        xlab="5-minute interval", 
        ylab="avaerage number of steps",
@@ -85,52 +91,67 @@ qplot(x = interval, y = intervalSteps$steps, geom ="line", color = I("blue"),
        )
 ```
 
+![](./PA1_template_files/figure-html/_ave_daily-1.png) 
+
 2. Find the maximum number of steps
-```{r_max}
+
+```r
 intervalMax <- intervalSteps[which.max(intervalSteps$steps),]
 ```
-The **`r intervalMax$interval`<sup>th</sup>** interval has maximum **`r round(intervalMax$steps)`** steps.
+The **835<sup>th</sup>** interval has maximum **206** steps.
 
 
 ## Imputing missing values
 
 ### 1. the total number of missing values
-```{r_tot_na}
+
+```r
 totalNA <- sum(is.na(data0$steps))
 ```
-The total number of missing values in the dataset is **`r totalNA`**.
+The total number of missing values in the dataset is **2304**.
 
 ### 2. use the mean of the 5-minute interval to reaplce all of NAs
-```{r_fill}
+
+```r
 NAidx <- which(is.na(data0$steps))
 intInfo <- data0[NAidx,]$interval
 intIdx <- unlist(lapply(1:length(intInfo), FUN = function(rowIdx) {which(intervalSteps$interval == intInfo[rowIdx])}))
 ```
 
 ### 3. create a new dataset with the misssing data filled in
-```{r_fill_db}
+
+```r
 dataFill <- data0
 dataFill[NAidx,]$steps <- intervalSteps[intIdx,]$steps   
 ```
 We can check whether there are many missing values or not
-```{r_check_na}
+
+```r
 sum(is.na(dataFill$steps))
+```
+
+```
+## [1] 0
 ```
 Zero output means that there are **No Missing Values**.
 
 ### 4. make a histogram of the total number of steps taken each day
-```{r_histo2}
+
+```r
 fillDailySteps <- aggregate(steps ~ date, dataFill, sum)
 hist(fillDailySteps$steps,main="Histogram of the Daily Steps after Filling in NAs", breaks=20,xlab="Total number of steps taken each day", col = "green")
 ```
 
+![](./PA1_template_files/figure-html/_histo2-1.png) 
+
 ### calculate the mean and median 
-```{r_mean_median2}
+
+```r
 filldailyStepsMean <- mean(fillDailySteps$steps, na.rm = TRUE)
 filldailyStepsMedian <- median(fillDailySteps$steps, na.rm = TRUE)
 ```
-- Before filling, the mean daily steps is **`r format(dailyStepsMean, digits=8)`** and the median daily steps is **`r format(dailyStepsMedian, digits=8)`**.
-- After filling, the mean daily steps is **`r format(filldailyStepsMean, digits=8)`** and the median daily steps is **`r format(filldailyStepsMedian, digits=8)`**.
+- Before filling, the mean daily steps is **10766.189** and the median daily steps is **10765**.
+- After filling, the mean daily steps is **10766.189** and the median daily steps is **10766.189**.
 
 Comparing the above caulaulation results, it can be oberserved that there is slight difference on median value after imputing missing data.
 
@@ -140,8 +161,16 @@ Since the NAs are replaced by the mean for 5-minute interval, imputing missing d
 
 ## Are there differences in activity patterns between weekdays and weekends?
 1. create a new factor in the dataset using `weekdays()` function with two levels: "weekdays"" and "weekends"
-```{r_weekday_factor}
+
+```r
 Sys.setlocale("LC_TIME","English")
+```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
 weekdayInfo <- as.factor(weekdays(as.Date(dataFill$date)))
 
 dataFill$Weekday <- as.factor((ifelse(weekdays(as.Date(dataFill$date)) %in% 
@@ -149,12 +178,14 @@ dataFill$Weekday <- as.factor((ifelse(weekdays(as.Date(dataFill$date)) %in%
 ```
 
 ###calculate mean steps over all weekdays and weekends
-```{r_weekday_mean}
+
+```r
 mean_by_weekday <- aggregate(steps ~ Weekday + interval, dataFill, mean)
 ```
 
 2. make a panel plot using the lattice system
-```{r_lattice}
+
+```r
 library("lattice")
 p<- xyplot(steps ~ interval | factor(Weekday), data = mean_by_weekday, 
            layout = c(1,2),
@@ -165,6 +196,8 @@ p<- xyplot(steps ~ interval | factor(Weekday), data = mean_by_weekday,
            )
 print(p)
 ```
+
+![](./PA1_template_files/figure-html/_lattice-1.png) 
 
 ### Observations
 From the above figure, it can been seen that the activities on the weekday has a clear peak at early time during a day, while the actitivies on the weekend has a distribution that is relatively flat.
